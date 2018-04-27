@@ -8,6 +8,7 @@ package mispconnector.tool;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -189,14 +190,20 @@ public class MISPConnectorTool extends Application {
                     showErrorDialog("Sono presenti campi obbligatori non compilati!", "");
                     return;
                 }
+                if(list_files.getSelectionModel().getSelectedIndex() >= 0){
+                    import_event(list_files.getSelectionModel().getSelectedItem().toString());
+                    list_files.getSelectionModel().select(-1);
+                    return;
+                }
                 try{
                     BufferedWriter br;
-                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+                    DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmm");
                     Date date = new Date();
                     String now = dateFormat.format(date);
                     String[] iocs;
+                    String filename = title_txt.getText() + "_" + now + ".json";
                     int distr_index = distribution_box.getSelectionModel().getSelectedIndex();
-                    br = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(now + ".json"), StandardCharsets.UTF_8));
+                    br = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), StandardCharsets.ISO_8859_1));
                     br.append("{\n");
                     br.append("\t\"distribution\": \"" + distr_index + "\",\n");
                     if(distr_index > 3)
@@ -220,7 +227,7 @@ public class MISPConnectorTool extends Application {
                     br.append("}");
                     br.close();
                     populate_files(list_files);
-                    import_event(now + ".json");                    
+                    import_event(filename);                    
                 }catch(IOException ex){
                     System.err.println(ex);
                 }
@@ -234,15 +241,13 @@ public class MISPConnectorTool extends Application {
             public void handle(MouseEvent event) {
                 try {
                     String filename = list_files.getSelectionModel().getSelectedItems().get(0).toString();
-                    FileReader fr = new FileReader(filename);
-                    BufferedReader br = new BufferedReader(fr);
+                    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filename), StandardCharsets.ISO_8859_1));
                     String sCurrentLine, file = "";
                     while ((sCurrentLine = br.readLine()) != null) 
                             file += sCurrentLine;
-                    fr.close();
+                    br.close();
                     
                     JSONObject datajson = new JSONObject(file);
-                    //System.out.println(datajson);
                     int distr_index = datajson.getInt("distribution");
                     if(distr_index > 3){
                         distr_index = datajson.getInt("sharing_group");
