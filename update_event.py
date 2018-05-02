@@ -52,3 +52,4 @@ for platform in event_platform:
 misp.tag(event['Event']['uuid'], event_tlp)
 misp.fast_publish(event['Event']['id'])
 print(event_info + " added: " + event['Event']['uuid'] + "\n")
+sys.exit(0)

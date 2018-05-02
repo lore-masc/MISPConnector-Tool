@@ -47,6 +47,7 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.scene.control.Alert.AlertType;
@@ -261,11 +262,11 @@ public class MISPConnectorTool extends Application {
                     showErrorDialog("Sono presenti campi obbligatori non compilati!", "");
                     return;
                 }
-                if(list_files.getSelectionModel().getSelectedIndex() >= 0){
+                /*if(list_files.getSelectionModel().getSelectedIndex() >= 0){
                     import_event(list_files.getSelectionModel().getSelectedItem().toString());
                     list_files.getSelectionModel().select(-1);
                     return;
-                }
+                }*/
                 try{
                     BufferedWriter br;
                     DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmm");
@@ -370,13 +371,17 @@ public class MISPConnectorTool extends Application {
         primaryStage.show();
     }
     
-    public void import_event(String json){
-        Runtime rt = Runtime.getRuntime();
-        try {
-            Process pr = rt.exec("update_event.exe " + json);
-        } catch (IOException ex) {
-            Logger.getLogger(MISPConnectorTool.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public void import_event(String json) throws IOException {
+        String command = "update_event.exe";
+        String deployDir = new java.io.File( "." ).getCanonicalPath();
+        ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/C", "start", command, json);
+        processBuilder.directory(new File(deployDir));
+        Process process = processBuilder.start();
+        Thread commandLineThread = new Thread();
+        commandLineThread.setDaemon(true);
+        commandLineThread.start();
+        System.out.println("Task Dispatched");
+
     }
     
     public void load_platforms(String search) {
