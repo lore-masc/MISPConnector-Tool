@@ -1,4 +1,5 @@
 # MISPConnector Tool
+![Screenshot](https://github.com/lore-masc/MISPConnector-Tool/blob/master/resources/mispconnector.png)
 
 The jar allows to import an event in MISP platform thanks its confortable GUI. It is conceived to upload vulnerability with few clicks.
 
