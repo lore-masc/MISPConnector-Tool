@@ -46,10 +46,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.input.KeyCode;
@@ -71,7 +72,7 @@ import org.json.JSONObject;
  */
 public class MISPConnectorTool extends Application {
     static final String CONFIG_FILE = "config.txt";
-    static String url, key;
+    static String url, key, cmd;
     static final ObservableList<String> files = FXCollections.observableArrayList();
     static final ObservableList<Pair<Integer, String>> groups = FXCollections.observableArrayList(new Pair<Integer, String>(0, "Your organisation only"), new Pair<Integer, String>(1, "This community only"), new Pair<Integer, String>(2, "Connected communities"), new Pair<Integer, String>(3, "All communities"));
     static final ObservableList<String> analysis_options = FXCollections.observableArrayList("Initial", "Ongoing", "Completed");
@@ -86,6 +87,7 @@ public class MISPConnectorTool extends Application {
             BufferedReader br = new BufferedReader(new FileReader(CONFIG_FILE));
             url = br.readLine();
             key = br.readLine();
+            cmd = br.readLine();
             br.close();
         }catch(IOException ex){
             System.err.println(ex);
@@ -126,8 +128,8 @@ public class MISPConnectorTool extends Application {
         //---------------------------- RIGHT BAR ---------------------------------
         
         //-------------- AUTH KEY BAR ------------------------
-        Label auth_key_lbl = new Label("*Auth key: ");
-        TextField auth_key_txt = new TextField(key);
+        Label auth_key_lbl = new Label("Auth key: ");
+        Label auth_key_txt = new Label(key);
         auth_key_txt.setMinWidth(300);
         
         HBox topBar1 = new HBox(auth_key_lbl, auth_key_txt);
@@ -195,8 +197,9 @@ public class MISPConnectorTool extends Application {
         tlp_box.setValue(tlp_options.get(0));
         
         Button submit_btn = new Button("IMPORT");
+        Button settings_btn = new Button("⚙");
         
-        HBox top_bar7 = new HBox(tlp_lbl, tlp_box, submit_btn);
+        HBox top_bar7 = new HBox(tlp_lbl, tlp_box, submit_btn, settings_btn);
         top_bar7.setAlignment(Pos.CENTER);
         top_bar7.setSpacing(10);
         //---------------------------------------------------
@@ -251,6 +254,21 @@ public class MISPConnectorTool extends Application {
                     if(!local_platform_options.contains(platform))
                         local_platform_options.add(platform);
                 list_local_platform.setItems(local_platform_options);
+            }
+        });
+        //------------------------------------------------------------------------
+        
+        //---------------------- SETTINGS CLICK EVENT ----------------------------
+        settings_btn.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Settings settings_form = new Settings();
+                Parent root = settings_form.getRoot();
+                Scene scene = new Scene(root, 400, 250);
+                Stage secondStage = new Stage();
+                secondStage.setTitle("MISP Connector Tool - Settings)");
+                secondStage.setScene(scene);
+                secondStage.show();            
             }
         });
         //------------------------------------------------------------------------
@@ -372,16 +390,17 @@ public class MISPConnectorTool extends Application {
     }
     
     public void import_event(String json) throws IOException {
-        String command = "update_event.exe";
+        ArrayList<String> cmds = new ArrayList<>();
+        for(String command : cmd.split(" "))
+            cmds.add(command);
+        cmds.add(json);
         String deployDir = new java.io.File( "." ).getCanonicalPath();
-        ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/C", "start", command, json);
+        ProcessBuilder processBuilder = new ProcessBuilder(cmds);
         processBuilder.directory(new File(deployDir));
         Process process = processBuilder.start();
         Thread commandLineThread = new Thread();
         commandLineThread.setDaemon(true);
         commandLineThread.start();
-        System.out.println("Task Dispatched");
-
     }
     
     public void load_platforms(String search) {
@@ -416,11 +435,10 @@ public class MISPConnectorTool extends Application {
             }
         } catch (Exception ex) {
             showErrorDialog("Impossibile stabilire la connessione con il server", ex.getMessage());
-            Logger.getLogger(MISPConnectorTool.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
-    public void showErrorDialog(String header, String err){
+    public static void showErrorDialog(String header, String err){
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle("Error Dialog");
         alert.setHeaderText("Ooops, è presente un errore!");
