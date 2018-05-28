@@ -10,22 +10,32 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.util.Pair;
+import javax.net.ssl.HttpsURLConnection;
+import static mispconnector.tool.MISPConnectorTool.groups;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *
  * @author lMasciullo
  */
 public class Settings {
+    static final ObservableList<String> tags_orgs = FXCollections.observableArrayList();
     static final String CONFIG_FILE = "config.txt";
-    static String url, key, cmd;
+    static String url, key, cmd, org;
+    ChoiceBox<String> starorg_box;
     
     public VBox getRoot() {
         try{
@@ -33,6 +43,7 @@ public class Settings {
             url = br.readLine();
             key = br.readLine();
             cmd = br.readLine();
+            org = br.readLine();
             br.close();
         }catch(IOException ex){
             System.err.println(ex);
@@ -61,6 +72,15 @@ public class Settings {
         cmd_bar.setAlignment(Pos.CENTER);
         cmd_bar.setSpacing(10);
         
+        load_orgs();
+        Label starorg_lbl = new Label("Org tag: ");
+        starorg_box = new ChoiceBox<String>(tags_orgs);
+        starorg_box.setValue(tags_orgs.get(0));
+        starorg_box.setPrefWidth(300);
+        HBox org_bar = new HBox(starorg_lbl, starorg_box);
+        org_bar.setAlignment(Pos.CENTER);
+        org_bar.setSpacing(10);
+        
         Button save_btn = new Button("Save");
         
         save_btn.setOnAction(new EventHandler<ActionEvent>() {
@@ -72,6 +92,7 @@ public class Settings {
                         br.write(url_txt.getText() + '\n');
                         br.write(key_txt.getText() + '\n');
                         br.write(cmd_txt.getText() + '\n');
+                        br.write(starorg_box.getValue() + '\n');
                         br.close();
                     }catch(IOException ex){
                         System.err.println(ex);
@@ -83,10 +104,31 @@ public class Settings {
         });
         
         
-        VBox root = new VBox(url_bar, key_bar, cmd_bar, save_btn);
+        VBox root = new VBox(url_bar, key_bar, cmd_bar, org_bar, save_btn);
         root.setAlignment(Pos.CENTER);
         root.setSpacing(20);
         return root;
     }
     
+    public void load_orgs(){
+        tags_orgs.clear();
+        try {
+            HttpsURLConnection conn = MISPConnectorTool.MISP_connect("organisations/index.json", "GET");
+            conn.disconnect();
+            String resp = MISPConnectorTool.getResponseConnection(conn);
+            JSONArray datajson = new JSONArray(resp);
+            for(int i = 0; i < datajson.length(); i++){
+                JSONObject org = datajson.getJSONObject(i).getJSONObject("Organisation");
+                String name_org = org.getString("name");
+                tags_orgs.add(new String(name_org));
+                if(name_org.contains(Settings.org)){
+                    String tmp = tags_orgs.get(0);
+                    tags_orgs.set(0, name_org);
+                    tags_orgs.set(i, tmp);
+                }
+            }
+        } catch (Exception ex) {
+            MISPConnectorTool.showErrorDialog("Impossibile stabilire la connessione con il server", ex.getMessage());
+        }
+    }
 }

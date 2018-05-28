@@ -46,3 +46,6 @@ config.txt
 
 #JSON files
 *.json
+__pycache__/
+
+*.spec

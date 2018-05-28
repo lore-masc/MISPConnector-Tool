@@ -72,7 +72,8 @@ import org.json.JSONObject;
  */
 public class MISPConnectorTool extends Application {
     static final String CONFIG_FILE = "config.txt";
-    static String url, key, cmd;
+    static final String RECENT_DIR = "json/";
+    static String url, key, cmd, org;
     static final ObservableList<String> files = FXCollections.observableArrayList();
     static final ObservableList<Pair<Integer, String>> groups = FXCollections.observableArrayList(new Pair<Integer, String>(0, "Your organisation only"), new Pair<Integer, String>(1, "This community only"), new Pair<Integer, String>(2, "Connected communities"), new Pair<Integer, String>(3, "All communities"));
     static final ObservableList<String> analysis_options = FXCollections.observableArrayList("Initial", "Ongoing", "Completed");
@@ -88,6 +89,7 @@ public class MISPConnectorTool extends Application {
             url = br.readLine();
             key = br.readLine();
             cmd = br.readLine();
+            org = br.readLine();
             br.close();
         }catch(IOException ex){
             System.err.println(ex);
@@ -291,7 +293,11 @@ public class MISPConnectorTool extends Application {
                     Date date = new Date();
                     String now = dateFormat.format(date);
                     String[] iocs;
-                    String filename = title_txt.getText() + "_" + now + ".json";
+                    File f = new File(RECENT_DIR);
+                    if (!f.exists())
+                        f.mkdir();
+                    
+                    String filename = f.getPath() + File.separator + title_txt.getText() + "_" + now + ".json";
                     int distr_index = distribution_box.getSelectionModel().getSelectedIndex();
                     br = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), StandardCharsets.ISO_8859_1));
                     br.append("{\n");
@@ -316,7 +322,8 @@ public class MISPConnectorTool extends Application {
                         if(local_platform_options.get(local_platform_options.size() - 1) != platform)  br.append(", ");
                     }
                     br.append("],\n");
-                    br.append("\t\"tlp\": \"" + tlp_box.getValue()+ "\"\n");
+                    br.append("\t\"tlp\": \"" + tlp_box.getValue()+ "\",\n");
+                    br.append("\t\"org\": \"" + org + "\"\n");
                     br.append("}");
                     br.close();
                     populate_files(list_files);
@@ -333,7 +340,7 @@ public class MISPConnectorTool extends Application {
             @Override
             public void handle(MouseEvent event) {
                 try {
-                    String filename = list_files.getSelectionModel().getSelectedItems().get(0).toString();
+                    String filename = RECENT_DIR + list_files.getSelectionModel().getSelectedItems().get(0).toString();
                     BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filename), StandardCharsets.ISO_8859_1));
                     String sCurrentLine, file = "";
                     while ((sCurrentLine = br.readLine()) != null) 
@@ -411,8 +418,11 @@ public class MISPConnectorTool extends Application {
             String resp = getResponseConnection(conn);
             JSONObject datajson = new JSONObject(resp);
             for(int i = 0; i < datajson.getJSONArray("Tag").length(); i++){
-                String platform = datajson.getJSONArray("Tag").getJSONObject(i).getString("name").split("=")[1];
-                platform_options.add(platform);
+                String tag = datajson.getJSONArray("Tag").getJSONObject(i).getString("name");
+                if(tag.contains("=")){
+                    tag = tag.split("=")[1];
+                }
+                platform_options.add(tag);
             }
             conn.disconnect();
         } catch (Exception ex) {
@@ -448,7 +458,7 @@ public class MISPConnectorTool extends Application {
 
     public void populate_files(ListView list_files) {
         files.clear();
-        File f = new File(".");
+        File f = new File(RECENT_DIR);
         if(f.isDirectory())
             for(File file : f.listFiles())
                 if(file.isFile() && file.getName().contains(".json"))
@@ -456,7 +466,7 @@ public class MISPConnectorTool extends Application {
         list_files.setItems(files);
     }
     
-    public String getResponseConnection(HttpsURLConnection conn) throws IOException{
+    public static String getResponseConnection(HttpsURLConnection conn) throws IOException{
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(conn.getInputStream()));
         String inputLine;
@@ -469,7 +479,7 @@ public class MISPConnectorTool extends Application {
         return response;
     }
     
-    public HttpsURLConnection MISP_connect(String get_request, String method) throws NoSuchAlgorithmException, KeyManagementException, MalformedURLException, IOException{
+    public static HttpsURLConnection MISP_connect(String get_request, String method) throws NoSuchAlgorithmException, KeyManagementException, MalformedURLException, IOException{
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[] {new DefaultTrustManager()}, new SecureRandom());
         SSLContext.setDefault(ctx);
