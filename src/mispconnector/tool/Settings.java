@@ -35,7 +35,6 @@ public class Settings {
     static final ObservableList<String> tags_orgs = FXCollections.observableArrayList();
     static final String CONFIG_FILE = "config.txt";
     static String url, key, cmd, org;
-    ChoiceBox<String> starorg_box;
     
     public VBox getRoot() {
         try{
@@ -67,6 +66,7 @@ public class Settings {
         
         Label cmd_lbl = new Label("Execution command: ");
         TextField cmd_txt = new TextField(cmd);
+        cmd_txt.setPromptText("cmd /C start update_event.exe");
         cmd_txt.setPrefWidth(300);
         HBox cmd_bar = new HBox(cmd_lbl, cmd_txt);
         cmd_bar.setAlignment(Pos.CENTER);
@@ -74,10 +74,11 @@ public class Settings {
         
         load_orgs();
         Label starorg_lbl = new Label("Org tag: ");
-        starorg_box = new ChoiceBox<String>(tags_orgs);
-        starorg_box.setValue(tags_orgs.get(0));
-        starorg_box.setPrefWidth(300);
-        HBox org_bar = new HBox(starorg_lbl, starorg_box);
+        ChoiceBox<String> tagsorg_box = new ChoiceBox<String>(tags_orgs);
+        if(!tags_orgs.isEmpty())
+            tagsorg_box.setValue(tags_orgs.get(0));
+        tagsorg_box.setPrefWidth(300);
+        HBox org_bar = new HBox(starorg_lbl, tagsorg_box);
         org_bar.setAlignment(Pos.CENTER);
         org_bar.setSpacing(10);
         
@@ -92,8 +93,9 @@ public class Settings {
                         br.write(url_txt.getText() + '\n');
                         br.write(key_txt.getText() + '\n');
                         br.write(cmd_txt.getText() + '\n');
-                        br.write(starorg_box.getValue() + '\n');
+                        br.write(tagsorg_box.getValue() + '\n');
                         br.close();
+                        MISPConnectorTool.showInfoDialog("Salvataggio riuscito!", "Riavvia il tool per poter rendere effettivi i cambiamenti effettuati.");
                     }catch(IOException ex){
                         System.err.println(ex);
                     }

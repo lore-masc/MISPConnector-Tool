@@ -12,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -85,6 +86,16 @@ public class MISPConnectorTool extends Application {
     @Override
     public void start(Stage primaryStage) {
         try{
+            File f = new File(CONFIG_FILE);
+            if (!f.exists()){
+                url = "";
+                key = "";
+                cmd = "";
+                org = "";
+                showErrorDialog("Non è stato trovato nessun file di configurazione!", "Se è la prima volta che avvii questo tool, "
+                        + "per favore vai nel form delle impostazioni e compila tutti i campi.\n"
+                        + "Eventuali errori successivi sono probabilmente collegati a questo messaggio.");
+            }
             BufferedReader br = new BufferedReader(new FileReader(CONFIG_FILE));
             url = br.readLine();
             key = br.readLine();
@@ -143,7 +154,8 @@ public class MISPConnectorTool extends Application {
         load_groups();
         Label distribution_lbl = new Label("Distribution: ");
         ChoiceBox distribution_box = new ChoiceBox(groups);
-        distribution_box.setValue(groups.get(4));
+        if(groups.size() > 4)
+            distribution_box.setValue(groups.get(4));
         Label analysis_lbl = new Label("Analysis: ");
         ChoiceBox analysis_box = new ChoiceBox(analysis_options);
         analysis_box.setValue(analysis_options.get(2));
@@ -453,6 +465,14 @@ public class MISPConnectorTool extends Application {
         alert.setTitle("Error Dialog");
         alert.setHeaderText("Ooops, è presente un errore!");
         alert.setContentText(header + "\n\n" + err);
+        alert.showAndWait();
+    }
+    
+    public static void showInfoDialog(String header, String info){
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("Information Dialog");
+        alert.setHeaderText("Operazione eseguita con successo!");
+        alert.setContentText(header + "\n\n" + info);
         alert.showAndWait();
     }
 
