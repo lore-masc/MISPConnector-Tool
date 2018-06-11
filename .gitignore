@@ -43,7 +43,7 @@ hs_err_pid*
 config.txt
 
 #JSON files
-*.json
+json/
 __pycache__/
 
 *.spec
