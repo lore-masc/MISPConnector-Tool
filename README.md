@@ -23,7 +23,7 @@ python3 update_event.py
 
 ### Installing
 
-Placed in any folder the following files and dirs.
+Placed in any folder the following files and dirs. You can find them in *dist* dir.
 
 * *data*
 * *lib*
