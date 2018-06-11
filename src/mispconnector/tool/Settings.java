@@ -98,7 +98,7 @@ public class Settings {
                         if(!url.endsWith("/"))
                             url += "/";
                         br.write(url + '\n');
-                        br.write(key_txt.getText().replaceAll(" ", "") + '\n');
+                        br.write(key_txt.getText().replaceAll("\\s", "").replaceAll("\t", "") + '\n');
                         br.write(cmd_txt.getText() + '\n');
                         br.write(tagsorg_box.getValue() + '\n');
                         br.close();
