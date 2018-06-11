@@ -21,9 +21,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.util.Pair;
+import javafx.stage.Stage;
 import javax.net.ssl.HttpsURLConnection;
-import static mispconnector.tool.MISPConnectorTool.groups;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -35,6 +34,11 @@ public class Settings {
     static final ObservableList<String> tags_orgs = FXCollections.observableArrayList();
     static final String CONFIG_FILE = "config.txt";
     static String url, key, cmd, org;
+    private Stage stage;
+
+    public Settings(Stage stage) {
+        this.stage = stage;
+    }
     
     public VBox getRoot() {
         try{
@@ -90,12 +94,16 @@ public class Settings {
                 if(!url_txt.getText().isEmpty() && !key_txt.getText().isEmpty() && !cmd_txt.getText().isEmpty()){
                     try{
                         BufferedWriter br = new BufferedWriter(new FileWriter(CONFIG_FILE));
-                        br.write(url_txt.getText() + '\n');
-                        br.write(key_txt.getText() + '\n');
+                        String url = url_txt.getText();
+                        if(!url.endsWith("/"))
+                            url += "/";
+                        br.write(url + '\n');
+                        br.write(key_txt.getText().replaceAll(" ", "") + '\n');
                         br.write(cmd_txt.getText() + '\n');
                         br.write(tagsorg_box.getValue() + '\n');
                         br.close();
                         MISPConnectorTool.showInfoDialog("Salvataggio riuscito!", "Riavvia il tool per poter rendere effettivi i cambiamenti effettuati.");
+                        stage.close();
                     }catch(IOException ex){
                         System.err.println(ex);
                     }

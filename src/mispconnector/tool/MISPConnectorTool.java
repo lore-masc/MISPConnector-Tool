@@ -12,7 +12,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -276,13 +275,13 @@ public class MISPConnectorTool extends Application {
         settings_btn.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                Settings settings_form = new Settings();
+                Stage secondStage = new Stage();
+                Settings settings_form = new Settings(secondStage);
                 Parent root = settings_form.getRoot();
                 Scene scene = new Scene(root, 400, 250);
-                Stage secondStage = new Stage();
                 secondStage.setTitle("MISP Connector Tool - Settings)");
                 secondStage.setScene(scene);
-                secondStage.show();            
+                secondStage.show();
             }
         });
         //------------------------------------------------------------------------
